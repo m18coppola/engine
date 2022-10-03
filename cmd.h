@@ -1,3 +1,5 @@
+#ifndef CMD_H
+#define CMD_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,3 +23,4 @@ struct cmd_Token *cmd_new_Token(char *str);
 void cmd_TokenList_append(struct cmd_TokenList *tl, char *str);
 void cmd_TokenList_free(struct cmd_TokenList *tl);
 char ** cmd_TokenList_vector(struct cmd_TokenList *tl);
+#endif /* CMD_H */

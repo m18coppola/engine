@@ -1,3 +1,5 @@
+#ifndef EVENTS_H
+#define EVENTS_H
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,4 +22,4 @@ struct EventQueue {
 
 void add_event(struct EventQueue *eq, event_action action, void *args);
 node *get_event(struct EventQueue *eq);
-
+#endif /* EVENTS_H */
