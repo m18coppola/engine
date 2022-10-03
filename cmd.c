@@ -1,5 +1,7 @@
 #include "cmd.h"
 
+static struct cmd_Function cmd_function_table[MAX_CMDS] = {0};
+
 void *
 cmd_cli_interactive(void *arg) {
 	/* prompt string */
@@ -33,8 +35,9 @@ cmd_cli_interactive(void *arg) {
 		}
 
 		args = cmd_disassembleCommand(cmd_line);
-		if (!strcmp(args[0],"exit")) {
-			exited = 1;
+        cmd_function_generic fn_ptr = cmd_get_function(args[0]);
+		if (fn_ptr != NULL) {
+            (*fn_ptr)(args+1);
 		} else {
 			printf("Command \"%s\" not recognized.\n", args[0]);
 		}
@@ -189,4 +192,39 @@ cmd_TokenList_free(struct cmd_TokenList *tl)
 	}
 
 	free(tl);
+}
+
+
+void
+cmd_register_command(char *name, cmd_function_generic function)
+{
+    unsigned int hash = cmd_hash_command(name);
+    int index = hash % MAX_CMDS;
+    while (cmd_function_table[index].hash != 0) {
+        index++;
+    }
+    cmd_function_table[index].hash = hash;
+    cmd_function_table[index].function_ptr = function;
+}
+
+cmd_function_generic
+cmd_get_function(char *name)
+{
+    unsigned int hash = cmd_hash_command(name);
+    int index = hash % MAX_CMDS;
+    while (cmd_function_table[index].hash != hash && cmd_function_table[index].hash != 0) {
+        index++;
+    }
+    return cmd_function_table[index].function_ptr;
+}
+
+unsigned int
+cmd_hash_command(char *str)
+{
+    long hash = FNV_OFFSET;
+    while (*str != '\0') {
+        hash *= FNV_PRIME;
+        hash ^= *(str++);
+    }
+    return hash;
 }

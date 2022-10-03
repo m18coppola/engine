@@ -11,11 +11,17 @@
 
 pthread_t cli_thread;
 struct EventQueue *eq;
+int engine_exited = 0;
+
+void main_exit(void) {
+    engine_exited = 1;
+}
 
 int
 main(int argc, char **argv)
 {
-	int engine_exited = 0;
+    cmd_register_command("exit", main_exit);
+
 	eq = malloc(sizeof(struct EventQueue));
 	eq->head = NULL;
 	eq->tail = NULL;

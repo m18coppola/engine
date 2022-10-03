@@ -3,11 +3,12 @@
 CC = gcc
 FLAGS=`sdl2-config --libs --cflags` -W -Wall -g
 LIBS= -lGLEW -lGL -lm -lreadline -lpthread
+OBJS = events.o window.o cmd.o
 
-all: main
+all: clear_screen main
 
-main: main.o window.o events.o cmd.o
-	$(CC) main.o window.o events.o cmd.o $(LIBS) $(FLAGS) -o app.bin
+main: main.o $(OBJS)
+	$(CC) main.o $(OBJS) $(LIBS) $(FLAGS) -o app.bin
 
 main.o: main.c
 	$(CC) main.c $(LIBS) $(FLAGS) -c -o main.o
@@ -44,6 +45,8 @@ checkcache: main
 	$(info )
 	valgrind --tool=cachegrind ./app.bin
 	
+clear_screen::
+	clear
 
 clean:
 	rm *.o
