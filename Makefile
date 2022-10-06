@@ -49,5 +49,8 @@ clear_screen::
 	clear
 
 clean:
-	rm *.o
-	rm ./app.bin
+	rm -f *.o
+	rm -f ./app.bin
+
+install: main
+	cp app.bin ~/.bin/rinse
