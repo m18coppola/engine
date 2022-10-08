@@ -53,4 +53,4 @@ clean:
 	rm -f ./app.bin
 
 install: main
-	cp app.bin ~/.bin/rinse
+	cp app.bin ~/.local/bin/rinse

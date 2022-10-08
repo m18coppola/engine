@@ -1,19 +1,13 @@
 #include "events.h"
 
-static struct EventQueue eq;
+static struct evt_EventQueue eq;
 
 void
-evt_init(void)
-{
-    pthread_mutex_init(&eq.mutex, NULL);
-}
-
-void
-evt_add_event(Event_Function new_function, void *arg)
+evt_add_event(evt_EventFn_t new_function, void *arg)
 {
 	pthread_mutex_lock(&eq.mutex);
-	Event *new_event;
-	new_event = malloc(sizeof(Event));
+	evt_Event_t *new_event;
+	new_event = malloc(sizeof(evt_Event_t));
 	new_event->fnptr = new_function;
 	new_event->arg = arg;
 	if (eq.tail == NULL) {
@@ -26,11 +20,11 @@ evt_add_event(Event_Function new_function, void *arg)
 	pthread_mutex_unlock(&eq.mutex);
 }
 
-Event *
+evt_Event_t *
 evt_get_event(void)
 {
 	pthread_mutex_lock(&eq.mutex);
-	Event *old_event;
+	evt_Event_t *old_event;
 	if (eq.head == NULL) {
 		pthread_mutex_unlock(&eq.mutex);
 		return NULL;
@@ -43,4 +37,10 @@ evt_get_event(void)
 		pthread_mutex_unlock(&eq.mutex);
 		return old_event;
 	}
+}
+
+void
+evt_init(void)
+{
+    pthread_mutex_init(&eq.mutex, NULL);
 }

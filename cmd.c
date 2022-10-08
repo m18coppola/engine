@@ -4,7 +4,11 @@ static struct cmd_Function cmd_function_table[MAX_CMDS] = {0};
 static pthread_t cli_thread;
 
 void *
-cmd_cli_interactive(void *arg) {
+cmd_cli_interactive(void *arg)
+{
+    /* parameter unused */
+    (void)arg;
+
 	/* prompt string */
 	char *prompt;
 
@@ -36,7 +40,7 @@ cmd_cli_interactive(void *arg) {
 		}
 
 		args = cmd_disassembleCommand(cmd_line);
-        cmd_function_generic fn_ptr = cmd_get_function(args[0]);
+        cmd_FnGeneric_t fn_ptr = cmd_get_function(args[0]);
 		if (fn_ptr != NULL) {
             (*fn_ptr)(args+1);
 		} else {
@@ -110,16 +114,33 @@ cmd_disassembleCommand(char* command)
 	return argv;	
 }
 
-struct cmd_TokenList *
-cmd_new_TokenList(void)
+cmd_FnGeneric_t
+cmd_get_function(char *name)
 {
-	struct cmd_TokenList *tl;
+    unsigned int hash = cmd_hash_command(name);
+    int index = hash % MAX_CMDS;
+    while (cmd_function_table[index].hash != hash && cmd_function_table[index].hash != 0) {
+        index++;
+    }
+    return cmd_function_table[index].function_ptr;
+}
 
-	tl = malloc(sizeof(struct cmd_TokenList));
-	tl->size = 0;
-	tl->head = NULL;
+unsigned int
+cmd_hash_command(char *str)
+{
+    long hash = FNV_OFFSET;
+    while (*str != '\0') {
+        hash *= FNV_PRIME;
+        hash ^= *(str++);
+    }
+    return hash;
+}
 
-	return tl;
+void
+cmd_init(void)
+{
+    pthread_create(&cli_thread, NULL, cmd_cli_interactive, NULL);
+    cmd_register_command("exit", (cmd_FnGeneric_t)main_exit);
 }
 
 struct cmd_Token *
@@ -132,6 +153,30 @@ cmd_new_Token(char *str)
 	t->next = NULL;
 
 	return t;
+}
+
+struct cmd_TokenList *
+cmd_new_TokenList(void)
+{
+	struct cmd_TokenList *tl;
+
+	tl = malloc(sizeof(struct cmd_TokenList));
+	tl->size = 0;
+	tl->head = NULL;
+
+	return tl;
+}
+
+void
+cmd_register_command(char *name, cmd_FnGeneric_t function)
+{
+    unsigned int hash = cmd_hash_command(name);
+    int index = hash % MAX_CMDS;
+    while (cmd_function_table[index].hash != 0) {
+        index++;
+    }
+    cmd_function_table[index].hash = hash;
+    cmd_function_table[index].function_ptr = function;
 }
 
 void
@@ -159,24 +204,6 @@ cmd_TokenList_append(struct cmd_TokenList *tl, char *str)
 	tl->size++;
 }
 
-char **
-cmd_TokenList_vector(struct cmd_TokenList *tl) {
-	int i;
-	struct cmd_Token **t_ptr;
-	char **vec;
-
-	vec = malloc((tl->size + 1) * sizeof(char *));
-	t_ptr = &(tl->head);
-	i = 0;
-	while ((*t_ptr) != NULL) {
-		vec[i++] = (*t_ptr)->string;
-		t_ptr = &(*t_ptr)->next;
-	}
-	vec[i] = NULL;
-
-	return vec;
-}
-
 void
 cmd_TokenList_free(struct cmd_TokenList *tl)
 {
@@ -195,44 +222,21 @@ cmd_TokenList_free(struct cmd_TokenList *tl)
 	free(tl);
 }
 
-
-void
-cmd_register_command(char *name, cmd_function_generic function)
+char **
+cmd_TokenList_vector(struct cmd_TokenList *tl)
 {
-    unsigned int hash = cmd_hash_command(name);
-    int index = hash % MAX_CMDS;
-    while (cmd_function_table[index].hash != 0) {
-        index++;
-    }
-    cmd_function_table[index].hash = hash;
-    cmd_function_table[index].function_ptr = function;
-}
+	int i;
+	struct cmd_Token **t_ptr;
+	char **vec;
 
-cmd_function_generic
-cmd_get_function(char *name)
-{
-    unsigned int hash = cmd_hash_command(name);
-    int index = hash % MAX_CMDS;
-    while (cmd_function_table[index].hash != hash && cmd_function_table[index].hash != 0) {
-        index++;
-    }
-    return cmd_function_table[index].function_ptr;
-}
+	vec = malloc((tl->size + 1) * sizeof(char *));
+	t_ptr = &(tl->head);
+	i = 0;
+	while ((*t_ptr) != NULL) {
+		vec[i++] = (*t_ptr)->string;
+		t_ptr = &(*t_ptr)->next;
+	}
+	vec[i] = NULL;
 
-unsigned int
-cmd_hash_command(char *str)
-{
-    long hash = FNV_OFFSET;
-    while (*str != '\0') {
-        hash *= FNV_PRIME;
-        hash ^= *(str++);
-    }
-    return hash;
-}
-
-void
-cmd_init(void)
-{
-    pthread_create(&cli_thread, NULL, cmd_cli_interactive, NULL);
-    cmd_register_command("exit", main_exit);
+	return vec;
 }

@@ -1,26 +1,28 @@
 #ifndef EVENTS_H
 #define EVENTS_H
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <pthread.h>
 
-typedef void(*Event_Function)(void *);
+#include <pthread.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef void(*evt_EventFn_t)(void *);
 
 typedef struct Event_ {
-	Event_Function fnptr;
+	evt_EventFn_t fnptr;
 	void *arg;
 	struct Event_ *next;
-} Event;
+} evt_Event_t;
 
-struct EventQueue {
+struct evt_EventQueue {
 	int size;
 	pthread_mutex_t mutex;
-	Event *head;
-	Event *tail;
+	evt_Event_t *head;
+	evt_Event_t *tail;
 };
 
+void evt_add_event(evt_EventFn_t fnptr, void *args);
+evt_Event_t *evt_get_event(void);
 void evt_init(void);
-void evt_add_event(Event_Function fnptr, void *args);
-Event *evt_get_event(void);
+
 #endif /* EVENTS_H */

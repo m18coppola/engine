@@ -3,17 +3,31 @@
 #include <stdio.h>
 #include "render.h"
 
-SDL_Window *window = NULL;
+static SDL_Window *window = NULL;
 
 void
-open_client(void *args)
+render(void)
+{
+	if (window != NULL) {
+		glClearColor(1.0, 1.0, 1.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		SDL_GL_SwapWindow(window);
+	}
+}
+
+void
+rnd_close(void)
+{
+	SDL_DestroyWindow(window);
+}
+
+void
+rnd_init(void)
 {
 
 	int width, height;
-	struct cl_res *in = (struct cl_res *)args;
-	width = in->width;
-	height = in->height;
-	free(args);
+	width = 720;
+	height = 480;
 
     /* begin SDL2 */
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -68,21 +82,3 @@ STAGE2_ERROR:
     SDL_Quit();
 STAGE1_ERROR:
 }
-
-void
-close_client(void *args)
-{
-	SDL_DestroyWindow(window);
-}
-
-void
-render_client(void)
-{
-	if (window != NULL) {
-		glClearColor(1.0, 1.0, 1.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-		SDL_GL_SwapWindow(window);
-	}
-}
-
-
