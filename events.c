@@ -10,6 +10,7 @@ evt_add_event(evt_EventFn_t new_function, void *arg)
 	new_event = malloc(sizeof(evt_Event_t));
 	new_event->fnptr = new_function;
 	new_event->arg = arg;
+	new_event->next = NULL;
 	if (eq.tail == NULL) {
 		eq.head = new_event;
 		eq.tail = new_event;
