@@ -24,6 +24,8 @@ cmd_cli_interactive(void *arg)
 	/* array of pointers to each individual argument */
 	char** args;
 
+    evt_EventFn_t fn_ptr;
+
 	/* main command-processing loop */
 	while (!exited) {
 
@@ -37,19 +39,19 @@ cmd_cli_interactive(void *arg)
 		}
 
 		args = cmd_tokenize(cmd_line);
-        evt_EventFn_t fn_ptr = cmd_get_function(args[1]);
-		if (fn_ptr != NULL) {
-            evt_add_event(fn_ptr, args);
-		} else {
-			printf("Command \"%s\" not recognized.\n", args[1]);
-		}
-
+        fn_ptr = NULL;
+        if (args[1] != NULL) {
+            fn_ptr = cmd_get_function(args[1]);
+            if (fn_ptr != NULL) {
+                evt_add_event(fn_ptr, args);
+            } else {
+                printf("Command \"%s\" not recognized.\n", args[1]);
+            }
+        } else {
+            free(args[0]);
+        }
 		args = NULL;
 	}
-
-	/* clean up */
-	if (args) free(args);
-	if (cmd_line) free(cmd_line);
 
 	return 0;
 }
