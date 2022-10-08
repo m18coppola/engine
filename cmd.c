@@ -42,7 +42,7 @@ cmd_cli_interactive(void *arg)
 		args = cmd_disassembleCommand(cmd_line);
         cmd_FnGeneric_t fn_ptr = cmd_get_function(args[0]);
 		if (fn_ptr != NULL) {
-            (*fn_ptr)(args+1);
+            evt_add_event(fn_ptr, NULL);
 		} else {
 			printf("Command \"%s\" not recognized.\n", args[0]);
 		}

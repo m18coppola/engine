@@ -6,6 +6,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <readline/readline.h>
+#include "events.h"
 #include "main.h"
 
 #define MAX_CMDS 64
