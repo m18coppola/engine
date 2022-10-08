@@ -12,7 +12,7 @@ typedef void(*evt_EventFn_t)(char **);
 
 typedef struct Event_ {
 	evt_EventFn_t fnptr;
-	char **arg;
+	char **args;
 	struct Event_ *next;
 } evt_Event_t; //TODO uneeded typedef?
 

@@ -3,13 +3,13 @@
 static struct evt_EventQueue eq;
 
 void
-evt_add_event(evt_EventFn_t new_function, void *arg)
+evt_add_event(evt_EventFn_t new_function, void *args)
 {
 	SDL_LockMutex(eq.mutex);
 	evt_Event_t *new_event;
 	new_event = malloc(sizeof(evt_Event_t));
 	new_event->fnptr = new_function;
-	new_event->arg = arg;
+	new_event->args = args;
 	new_event->next = NULL;
 	if (eq.tail == NULL) {
 		eq.head = new_event;
@@ -53,7 +53,10 @@ evt_process(void)
 
 		evt_get_input();
         while((event = evt_get_event()) != NULL) {
-            (*event->fnptr)(event->arg);
+            (*event->fnptr)(event->args);
+            free(event->args[0]);
+            free(event->args);
+            free(event);
         }
 }
 
