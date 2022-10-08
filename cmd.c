@@ -127,6 +127,7 @@ cmd_init(void)
 {
 	cli_thread = SDL_CreateThread((SDL_ThreadFunction)cmd_cli_interactive, "CLI", NULL);
     cmd_register_command("exit", main_exit);
+    cmd_register_command("load_shader", dbg_rnd_load_shader);
 }
 
 void

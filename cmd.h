@@ -8,6 +8,7 @@
 #include <readline/readline.h>
 #include "events.h"
 #include "main.h"
+#include "debug.h"
 
 #define MAX_CMDS 64
 #define FNV_OFFSET 0xcbf29ce484222325

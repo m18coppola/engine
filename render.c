@@ -1,6 +1,3 @@
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <stdio.h>
 #include "render.h"
 
 static SDL_Window *window = NULL;
@@ -76,4 +73,21 @@ STAGE3_ERROR:
 STAGE2_ERROR:
     SDL_Quit();
 STAGE1_ERROR:
+}
+
+rnd_Shader_t
+rnd_load_shader(char *filename)
+{
+    SDL_RWops *io;
+    char *source;
+    size_t filesize;
+
+    io = SDL_RWFromFile(filename, "r");
+    filesize = SDL_RWsize(io);
+    source = malloc(filesize);
+    if (SDL_RWread(io, source, filesize, 1) > 0) {
+        printf("%s\n", source);
+    }
+    SDL_RWclose(io);
+    return (rnd_Shader_t)0;
 }
