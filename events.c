@@ -5,7 +5,7 @@ static struct evt_EventQueue eq;
 void
 evt_add_event(evt_EventFn_t new_function, void *arg)
 {
-	pthread_mutex_lock(&eq.mutex);
+	SDL_LockMutex(eq.mutex);
 	evt_Event_t *new_event;
 	new_event = malloc(sizeof(evt_Event_t));
 	new_event->fnptr = new_function;
@@ -18,16 +18,16 @@ evt_add_event(evt_EventFn_t new_function, void *arg)
 		eq.tail->next = new_event;
 		eq.tail = new_event;
 	}
-	pthread_mutex_unlock(&eq.mutex);
+	SDL_UnlockMutex(eq.mutex);
 }
 
 evt_Event_t *
 evt_get_event(void)
 {
-	pthread_mutex_lock(&eq.mutex);
+	SDL_LockMutex(eq.mutex);
 	evt_Event_t *old_event;
 	if (eq.head == NULL) {
-		pthread_mutex_unlock(&eq.mutex);
+		SDL_UnlockMutex(eq.mutex);
 		return NULL;
 	} else {
 		old_event = eq.head;
@@ -35,7 +35,7 @@ evt_get_event(void)
 		if (eq.head == NULL) {
 			eq.tail = NULL;
 		}
-		pthread_mutex_unlock(&eq.mutex);
+		SDL_UnlockMutex(eq.mutex);
 		return old_event;
 	}
 }
@@ -43,5 +43,20 @@ evt_get_event(void)
 void
 evt_init(void)
 {
-    pthread_mutex_init(&eq.mutex, NULL);
+	eq.mutex = SDL_CreateMutex();
+}
+
+void
+evt_process_input(void)
+{
+	SDL_Event e;
+	while (SDL_PollEvent(&e) != 0) {
+		switch (e.type) {
+			case SDL_QUIT:
+				evt_add_event((evt_EventFn_t)main_exit, NULL);
+				break;
+			default:
+				break;
+		}
+	}
 }

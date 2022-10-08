@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+#include <SDL2/SDL.h>
 #include <readline/readline.h>
 #include "events.h"
 #include "main.h"
@@ -30,7 +30,7 @@ struct cmd_Function {
     cmd_FnGeneric_t function_ptr;
 };
 
-void *cmd_cli_interactive(void *arg);
+int cmd_cli_interactive(void *arg);
 char **cmd_disassembleCommand(char* command);
 cmd_FnGeneric_t cmd_get_function(char *name);
 unsigned int cmd_hash_command(char *str);

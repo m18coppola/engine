@@ -1,9 +1,9 @@
 #include "cmd.h"
 
 static struct cmd_Function cmd_function_table[MAX_CMDS] = {0};
-static pthread_t cli_thread;
+static SDL_Thread *cli_thread;
 
-void *
+int
 cmd_cli_interactive(void *arg)
 {
     /* parameter unused */
@@ -19,7 +19,7 @@ cmd_cli_interactive(void *arg)
 	char *cmd_line = NULL;
 	
 	/* default prompt */
-	prompt = "[$) ";
+	prompt = "$ ";
 
 	/* array of pointers to each individual argument */
 	char** args;
@@ -55,7 +55,7 @@ cmd_cli_interactive(void *arg)
 	if (args) free(args);
 	if (cmd_line) free(cmd_line);
 
-	return NULL;
+	return 0;
 }
 
 char **
@@ -139,7 +139,7 @@ cmd_hash_command(char *str)
 void
 cmd_init(void)
 {
-    pthread_create(&cli_thread, NULL, cmd_cli_interactive, NULL);
+	cli_thread = SDL_CreateThread((SDL_ThreadFunction)cmd_cli_interactive, "CLI", NULL);
     cmd_register_command("exit", (cmd_FnGeneric_t)main_exit);
 }
 

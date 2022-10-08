@@ -2,7 +2,7 @@
 
 CC = gcc
 FLAGS=`sdl2-config --libs --cflags` -W -Wall -g
-LIBS= -lGLEW -lGL -lm -lreadline -lpthread
+LIBS= -lGLEW -lGL -lm -lreadline 
 OBJS = events.o render.o cmd.o
 
 all: clear_screen main

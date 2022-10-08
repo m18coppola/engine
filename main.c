@@ -28,10 +28,14 @@ main(int argc, char **argv)
 	printf("Starting Engine.\nPID:%d\n", getpid());
     evt_init();
     cmd_init();
+	rnd_init(720, 480);
 	while (!engine_exited) {
+		evt_process_input();
         while((event = evt_get_event()) != NULL) {
             (*event->fnptr)(event->arg);
         }
+		render();
 	}
+	rnd_close();
 	return 0;
 }

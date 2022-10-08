@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL.h>
+#include "main.h"
 
 typedef void(*evt_EventFn_t)(void *);
 
@@ -16,7 +18,7 @@ typedef struct Event_ {
 
 struct evt_EventQueue {
 	int size;
-	pthread_mutex_t mutex;
+	SDL_mutex *mutex;
 	evt_Event_t *head;
 	evt_Event_t *tail;
 };
@@ -24,5 +26,6 @@ struct evt_EventQueue {
 void evt_add_event(evt_EventFn_t fnptr, void *args);
 evt_Event_t *evt_get_event(void);
 void evt_init(void);
+void evt_process_input(void);
 
 #endif /* EVENTS_H */

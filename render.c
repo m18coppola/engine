@@ -22,13 +22,8 @@ rnd_close(void)
 }
 
 void
-rnd_init(void)
+rnd_init(int width, int height)
 {
-
-	int width, height;
-	width = 720;
-	height = 480;
-
     /* begin SDL2 */
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(
@@ -46,7 +41,7 @@ rnd_init(void)
 
     /* create window */
     window = SDL_CreateWindow(
-            "cgfw",
+            "rinse",
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
             width, height,
             SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
