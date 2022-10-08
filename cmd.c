@@ -1,6 +1,7 @@
 #include "cmd.h"
 
 static struct cmd_Function cmd_function_table[MAX_CMDS] = {0};
+static pthread_t cli_thread;
 
 void *
 cmd_cli_interactive(void *arg) {
@@ -227,4 +228,11 @@ cmd_hash_command(char *str)
         hash ^= *(str++);
     }
     return hash;
+}
+
+void
+cmd_init(void)
+{
+    pthread_create(&cli_thread, NULL, cmd_cli_interactive, NULL);
+    cmd_register_command("exit", main_exit);
 }

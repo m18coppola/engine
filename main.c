@@ -8,33 +8,26 @@
 #include "window.h"
 #include "events.h"
 #include "cmd.h"
+#include "main.h"
 
-pthread_t cli_thread;
-struct EventQueue *eq;
 int engine_exited = 0;
 
-void main_exit(void) {
+void
+main_exit(void *arg) {
     engine_exited = 1;
 }
 
 int
 main(int argc, char **argv)
 {
-    cmd_register_command("exit", main_exit);
-
-	eq = malloc(sizeof(struct EventQueue));
-	eq->head = NULL;
-	eq->tail = NULL;
-	node *action;
-	pthread_mutex_init(&eq->mutex, NULL);
-	pthread_create(&cli_thread, NULL, cmd_cli_interactive, NULL);
+    Event *event;
 	printf("Starting Engine.\nPID:%d\n", getpid());
+    evt_init();
+    cmd_init();
 	while (!engine_exited) {
-		action = get_event(eq);
-		while (action != NULL) {
-			(*action->action)(action->arg);
-			action = get_event(eq);
-		}
+        while((event = evt_get_event()) != NULL) {
+            (*event->fnptr)(event->arg);
+        }
 	}
 	return 0;
 }

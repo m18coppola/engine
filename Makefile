@@ -3,7 +3,7 @@
 CC = gcc
 FLAGS=`sdl2-config --libs --cflags` -W -Wall -g
 LIBS= -lGLEW -lGL -lm -lreadline -lpthread
-OBJS = events.o window.o cmd.o
+OBJS = events.o render.o cmd.o
 
 all: clear_screen main
 
@@ -16,8 +16,8 @@ main.o: main.c
 events.o: events.c
 	$(CC) events.c $(LIBS) $(FLAGS) -c -o events.o
 
-window.o: window.c
-	$(CC) window.c $(LIBS) $(FLAGS) -c -o window.o
+render.o: render.c
+	$(CC) render.c $(LIBS) $(FLAGS) -c -o render.o
 
 cmd.o: cmd.c
 	$(CC) cmd.c $(LIBS) $(FLAGS) -c -o cmd.o

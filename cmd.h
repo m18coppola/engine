@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <readline/readline.h>
+#include "main.h"
 
 struct cmd_Token {
 	char *string;
@@ -38,13 +39,7 @@ char ** cmd_TokenList_vector(struct cmd_TokenList *tl);
 void cmd_register_command(char *name, cmd_function_generic function);
 cmd_function_generic cmd_get_function(char *name);
 unsigned int cmd_hash_command(char *str);
+void cmd_init(void);
 
 #endif /* CMD_H */
 
-/*
-cmd_function_t    *cmd_functions     // A linked list, each element contains a string name and a function pointer: void (*)() .
-cvar_t            *cvar_vars         // A linked list, each element contains a string name and a string value.
-cmdalias_t        *cmd_alias         // A linked list, each element contains a string name and a string alias.
-
-hastable needs: insert, delete, search
-*/

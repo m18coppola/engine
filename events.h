@@ -5,21 +5,22 @@
 #include <stdio.h>
 #include <pthread.h>
 
-typedef void(*event_action)(void *);
+typedef void(*Event_Function)(void *);
 
-typedef struct node_ {
-	event_action action;
+typedef struct Event_ {
+	Event_Function fnptr;
 	void *arg;
-	struct node_ *next;
-} node;
+	struct Event_ *next;
+} Event;
 
 struct EventQueue {
 	int size;
 	pthread_mutex_t mutex;
-	node *head;
-	node *tail;
+	Event *head;
+	Event *tail;
 };
 
-void add_event(struct EventQueue *eq, event_action action, void *args);
-node *get_event(struct EventQueue *eq);
+void evt_init(void);
+void evt_add_event(Event_Function fnptr, void *args);
+Event *evt_get_event(void);
 #endif /* EVENTS_H */
