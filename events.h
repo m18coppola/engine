@@ -8,13 +8,13 @@
 #include <SDL2/SDL.h>
 #include "main.h"
 
-typedef void(*evt_EventFn_t)(void *);
+typedef void(*evt_EventFn_t)(char **);
 
 typedef struct Event_ {
 	evt_EventFn_t fnptr;
-	void *arg;
+	char **arg;
 	struct Event_ *next;
-} evt_Event_t;
+} evt_Event_t; //TODO uneeded typedef?
 
 struct evt_EventQueue {
 	int size;
@@ -26,6 +26,7 @@ struct evt_EventQueue {
 void evt_add_event(evt_EventFn_t fnptr, void *args);
 evt_Event_t *evt_get_event(void);
 void evt_init(void);
-void evt_process_input(void);
+void evt_process(void);
+void evt_get_input(void);
 
 #endif /* EVENTS_H */

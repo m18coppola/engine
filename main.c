@@ -13,7 +13,9 @@
 static int engine_exited = 0;
 
 void
-main_exit(void) {
+main_exit(char **args)
+{
+    free(*args);
     engine_exited = 1;
 }
 
@@ -24,16 +26,12 @@ main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
-    evt_Event_t *event;
 	printf("Starting Engine.\nPID:%d\n", getpid());
     evt_init();
     cmd_init();
 	rnd_init(720, 480);
 	while (!engine_exited) {
-		evt_process_input();
-        while((event = evt_get_event()) != NULL) {
-            (*event->fnptr)(event->arg);
-        }
+        evt_process();
 		render();
 	}
 	rnd_close();

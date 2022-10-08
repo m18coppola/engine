@@ -47,7 +47,18 @@ evt_init(void)
 }
 
 void
-evt_process_input(void)
+evt_process(void)
+{
+        evt_Event_t *event;
+
+		evt_get_input();
+        while((event = evt_get_event()) != NULL) {
+            (*event->fnptr)(event->arg);
+        }
+}
+
+void
+evt_get_input(void)
 {
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {

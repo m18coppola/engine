@@ -28,9 +28,6 @@ cmd_cli_interactive(void *arg)
 	while (!exited) {
 
 		/* read next command prompt line */
-		if (cmd_line != NULL) {
-			free(cmd_line);
-		}
 		cmd_line = readline(prompt);
 
 		/* NULL return indicates EOF */
@@ -39,15 +36,14 @@ cmd_cli_interactive(void *arg)
 			break;
 		}
 
-		args = cmd_disassembleCommand(cmd_line);
-        cmd_FnGeneric_t fn_ptr = cmd_get_function(args[0]);
+		args = cmd_tokenize(cmd_line);
+        evt_EventFn_t fn_ptr = cmd_get_function(args[1]);
 		if (fn_ptr != NULL) {
-            evt_add_event(fn_ptr, NULL);
+            evt_add_event(fn_ptr, args);
 		} else {
-			printf("Command \"%s\" not recognized.\n", args[0]);
+			printf("Command \"%s\" not recognized.\n", args[1]);
 		}
 
-		free(args);
 		args = NULL;
 	}
 
@@ -59,62 +55,50 @@ cmd_cli_interactive(void *arg)
 }
 
 char **
-cmd_disassembleCommand(char* command)
+cmd_tokenize(char *str)
 {
-	/* index: current character pointer, length: current character group length, i: index of copied string */
-	int index, length, newGroupLength, i, j;
-	/* string that points to the current chracter group */
-	char* currentArgument;
-	/* list of arguments */
-	struct cmd_TokenList* args;
-	/* argument vector */
-	char** argv;
+    char **token_list;
+    struct cmd_Token *head;
+    struct cmd_Token *ptr;
+    head = malloc(sizeof(struct cmd_Token));
+    head->string = str;
+    head->next = NULL;
+    ptr = head;
+    int i;
+    int in_token = 0;
+    int token_count = 0;
+    
+    while (*str != '\0') {
+        if (*str <= ' ') {
+            if (in_token) {
+                *str = '\0';
+                in_token = 0;
+            }
+        } else if (!in_token) {
+            token_count++;
+            ptr->next = malloc(sizeof(struct cmd_Token));
+            ptr = ptr->next;
+            ptr->string = str;
+            ptr->next = NULL;
+            in_token = 1;
+        }
+        str++;
+    }
+    token_list = malloc(sizeof(char **) * (2 + token_count));
+    i = 0;
+    while(head != NULL) {
+        token_list[i] = head->string;
+        ptr = head;
+        head = head->next;
+        free(ptr);
+        i++;
+    }
+    token_list[i] = NULL;
 
-	args = cmd_new_TokenList();
-
-	index = 0;
-	/* while we haven't reached the end of the string */
-	while (command[index] != '\0') {
-		if (command[index] == ' ' || command[index] == '\t') {
-			/* if we're currently on a whitespace, jump to next index */
-			index++;
-		} else {
-			/* count the length of the group */
-			length = 0;
-			newGroupLength = 0;
-			while (command[index + length] != ' '
-					&& command[index + length] != '\t'
-					&& command[index + length] != '\0'){
-				if(command[index + length] == '\\')
-				{
-					length++;
-				}
-				length++;
-				newGroupLength++;
-			}
-			/* copy the group */
-			currentArgument = malloc(sizeof(char) * (newGroupLength + 1));
-			j = 0;
-			for (i = 0; i < length; i++) {
-				if(command[index + i] != '\\'){
-					currentArgument[j] = command[index + i];
-					j++;
-				}
-			}
-			currentArgument[newGroupLength] = '\0';
-
-			cmd_TokenList_append(args, currentArgument);
-			index += length;
-		}
-	}	
-	
-	argv = cmd_TokenList_vector(args);
-	cmd_TokenList_free(args);
-
-	return argv;	
+    return token_list;
 }
 
-cmd_FnGeneric_t
+evt_EventFn_t
 cmd_get_function(char *name)
 {
     unsigned int hash = cmd_hash_command(name);
@@ -140,35 +124,11 @@ void
 cmd_init(void)
 {
 	cli_thread = SDL_CreateThread((SDL_ThreadFunction)cmd_cli_interactive, "CLI", NULL);
-    cmd_register_command("exit", (cmd_FnGeneric_t)main_exit);
-}
-
-struct cmd_Token *
-cmd_new_Token(char *str)
-{
-	struct cmd_Token *t;
-
-	t = malloc(sizeof(struct cmd_Token));
-	t->string = str;
-	t->next = NULL;
-
-	return t;
-}
-
-struct cmd_TokenList *
-cmd_new_TokenList(void)
-{
-	struct cmd_TokenList *tl;
-
-	tl = malloc(sizeof(struct cmd_TokenList));
-	tl->size = 0;
-	tl->head = NULL;
-
-	return tl;
+    cmd_register_command("exit", main_exit);
 }
 
 void
-cmd_register_command(char *name, cmd_FnGeneric_t function)
+cmd_register_command(char *name, evt_EventFn_t function)
 {
     unsigned int hash = cmd_hash_command(name);
     int index = hash % MAX_CMDS;
@@ -177,66 +137,4 @@ cmd_register_command(char *name, cmd_FnGeneric_t function)
     }
     cmd_function_table[index].hash = hash;
     cmd_function_table[index].function_ptr = function;
-}
-
-void
-cmd_TokenList_append(struct cmd_TokenList *tl, char *str)
-{
-	struct cmd_Token **t_ptr;
-	struct cmd_Token *t;
-
-	t = malloc(sizeof(struct cmd_Token));
-	if (t == NULL) {
-		fprintf(stderr, "malloc() returned NULL while adding to cmd_TokenList");
-		return; 
-	}
-	t->string = str;
-	t->next = NULL;
-
-	t_ptr = &(tl->head);
-	while ((*t_ptr) != NULL) {
-		//node *finger = (*p);
-		//finger = finger->next;
-		//p = &(finger);
-		t_ptr = &(*t_ptr)->next;
-	}
-	(*t_ptr) = t;
-	tl->size++;
-}
-
-void
-cmd_TokenList_free(struct cmd_TokenList *tl)
-{
-	struct cmd_Token *t_ptr;
-	struct cmd_Token *t_ptr_next;
-
-	t_ptr = tl->head;
-	t_ptr_next = t_ptr;
-	while (t_ptr != NULL) {
-		t_ptr_next = t_ptr->next;
-		//free(t_ptr->string);
-		free(t_ptr);
-		t_ptr = t_ptr_next;
-	}
-
-	free(tl);
-}
-
-char **
-cmd_TokenList_vector(struct cmd_TokenList *tl)
-{
-	int i;
-	struct cmd_Token **t_ptr;
-	char **vec;
-
-	vec = malloc((tl->size + 1) * sizeof(char *));
-	t_ptr = &(tl->head);
-	i = 0;
-	while ((*t_ptr) != NULL) {
-		vec[i++] = (*t_ptr)->string;
-		t_ptr = &(*t_ptr)->next;
-	}
-	vec[i] = NULL;
-
-	return vec;
 }
