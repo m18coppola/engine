@@ -22,18 +22,51 @@ main_exit(char **args)
 int
 main(int argc, char **argv)
 {
+    SDL_LogSetAllPriority(SDL_LOG_PRIORITY_WARN);
     /* parameters unused */
     (void)argc;
     (void)argv;
 
-	printf("Starting Engine.\nPID:%d\n", getpid());
-    evt_init();
-    cmd_init();
-	rnd_init(720, 480);
+    printf("Starting Engine.\nPID:%d\n", getpid());
+    if(init() < 0) {
+        fprintf(
+                stderr,
+                "MAIN: Engine initialization failed. Exiting.\n");
+        exit(-1);
+    }
+
 	while (!engine_exited) {
         evt_process();
 		render();
 	}
 	rnd_close();
 	return 0;
+}
+
+int
+init()
+{
+    evt_init();
+    cmd_init();
+
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        fprintf(
+                stderr,
+                "MAIN: SDL2 failed to initialize. SDL_Error: %s\n",
+                SDL_GetError());
+        goto STAGE1_ERROR;
+    }
+
+    if(rnd_init(720, 480) < 0) {
+        fprintf(
+                stderr,
+                "MAIN: rnd system failed to initialize.\n");
+        goto STAGE2_ERROR;
+    }
+
+    return 0;
+STAGE2_ERROR:
+    SDL_Quit();
+STAGE1_ERROR:
+    return -1;
 }

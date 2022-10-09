@@ -9,7 +9,7 @@ typedef GLuint rnd_Shader_t;
 
 void render(void);
 void rnd_close(void);
-void rnd_init(int width, int height);
+int rnd_init(int width, int height);
 rnd_Shader_t rnd_load_shader(char *filename);
 
 #endif /* RENDER_H */

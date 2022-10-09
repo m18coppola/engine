@@ -1,6 +1,7 @@
 #include "cmd.h"
 
 static struct cmd_Function cmd_function_table[MAX_CMDS] = {0};
+static struct cmd_Variable cmd_variable_table[MAX_VARS] = {0};
 static SDL_Thread *cli_thread;
 
 int
@@ -104,7 +105,10 @@ cmd_tokenize(char *str)
 evt_EventFn_t
 cmd_get_function(char *name)
 {
-    unsigned int hash = cmd_hash_command(name);
+    if (name == NULL) {
+        return NULL;
+    }
+    unsigned int hash = cmd_hash(name);
     int index = hash % MAX_CMDS;
     while (cmd_function_table[index].hash != hash && cmd_function_table[index].hash != 0) {
         index++;
@@ -113,7 +117,7 @@ cmd_get_function(char *name)
 }
 
 unsigned int
-cmd_hash_command(char *str)
+cmd_hash(char *str)
 {
     long hash = FNV_OFFSET;
     while (*str != '\0') {
@@ -134,11 +138,35 @@ cmd_init(void)
 void
 cmd_register_command(char *name, evt_EventFn_t function)
 {
-    unsigned int hash = cmd_hash_command(name);
+    unsigned int hash = cmd_hash(name);
     int index = hash % MAX_CMDS;
     while (cmd_function_table[index].hash != 0) {
         index++;
     }
     cmd_function_table[index].hash = hash;
     cmd_function_table[index].function_ptr = function;
+}
+
+char**
+cmd_get_variable(char *name)
+{
+    unsigned int hash = cmd_hash(name);
+    int index = hash % MAX_VARS;
+    while (cmd_variable_table[index].hash != hash && cmd_variable_table[index].hash != 0) {
+        index++;
+    }
+    return &cmd_variable_table[index].value;
+}
+
+
+void
+cmd_register_variable(char *name, char *value)
+{
+    unsigned int hash = cmd_hash(name);
+    int index = hash % MAX_VARS;
+    while (cmd_variable_table[index].hash != 0) {
+        index++;
+    }
+    cmd_variable_table[index].hash = hash;
+    cmd_variable_table[index].value = value;
 }
