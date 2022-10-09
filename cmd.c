@@ -39,17 +39,18 @@ cmd_cli_interactive(void *arg)
 		}
 
 		args = cmd_tokenize(cmd_line);
-        fn_ptr = NULL;
-        if (args[1] != NULL) {
-            fn_ptr = cmd_get_function(args[1]);
-            if (fn_ptr != NULL) {
+        fn_ptr = cmd_get_function(args[1]);
+        if (fn_ptr != NULL) {
                 evt_add_event(fn_ptr, args);
-            } else {
+        } else {
+            if (args[1] != NULL) {
                 printf("Command \"%s\" not recognized.\n", args[1]);
             }
-        } else {
             free(args[0]);
+            free(args);
         }
+       
+        
 		args = NULL;
 	}
 
