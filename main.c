@@ -22,7 +22,6 @@ main_exit(char **args)
 int
 main(int argc, char **argv)
 {
-    SDL_LogSetAllPriority(SDL_LOG_PRIORITY_WARN);
     /* parameters unused */
     (void)argc;
     (void)argv;
