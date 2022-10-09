@@ -15,7 +15,6 @@ static int engine_exited = 0;
 void
 main_exit(char **args)
 {
-    free(*args);
     engine_exited = 1;
 }
 
