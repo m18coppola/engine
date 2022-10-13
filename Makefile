@@ -1,29 +1,18 @@
 # -*-Makefile-*-
 
 CC = gcc
-FLAGS=`sdl2-config --libs --cflags` -W -Wall -g
-LIBS= -lGLEW -lGL -lm -lreadline 
-OBJS = events.o render.o cmd.o debug.o
+FLAGS=`sdl2-config --cflags` -W -Wall -g
+LIBS= -lGLEW -lGL -lm -lreadline `sdl2-config --libs`
+SRCS = $(wildcard *.c)
+OBJS = $(patsubst %.c, %.o, $(SRCS))
 
 all: clear_screen main
 
-main: main.o $(OBJS)
-	$(CC) main.o $(OBJS) $(LIBS) $(FLAGS) -o app.bin
+main: $(OBJS)
+	$(CC) $(LIBS) $(FLAGS) $^ -o app.bin
 
-main.o: main.c
-	$(CC) main.c $(LIBS) $(FLAGS) -c -o main.o
-
-events.o: events.c
-	$(CC) events.c $(LIBS) $(FLAGS) -c -o events.o
-
-render.o: render.c
-	$(CC) render.c $(LIBS) $(FLAGS) -c -o render.o
-
-cmd.o: cmd.c
-	$(CC) cmd.c $(LIBS) $(FLAGS) -c -o cmd.o
-
-debug.o: debug.c
-	$(CC) debug.c $(LIBS) $(FLAGS) -c -o debug.o
+%.o: %.c
+	$(CC) $(LIBS) $(FLAGS) -c $< -o $@
 
 run: main
 	$(info )
@@ -32,26 +21,26 @@ run: main
 	$(info )
 	./app.bin
 
-checkmem: main
+memcheck: main 
 	$(info )
 	$(info ___STARTING EXECUTION___)
 	$(info ____CHECKMEM ENABLED____)
 	$(info ========================)
 	$(info )
-	valgrind --leak-check=full --track-origins=yes ./app.bin
+	valgrind --tool=memcheck --leak-check=full --log-file="logs/memcheck.log" ./app.bin
 
-checkcache: main
+cachecheck: main logs
 	$(info )
 	$(info ___STARTING EXECUTION___)
 	$(info ___CHECKCACHE ENABLED___)
 	$(info ========================)
 	$(info )
-	valgrind --tool=cachegrind ./app.bin
-	
+	valgrind --tool=cachegrind --log-file="logs/cachecheck.log" ./app.bin
+
 clear_screen::
 	clear
 
-clean:
+clean::
 	rm -f *.o
 	rm -f ./app.bin
 
