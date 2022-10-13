@@ -6,8 +6,8 @@ void
 evt_add_event(evt_EventFn_t new_function, void *args)
 {
 	SDL_LockMutex(eq.mutex);
-	evt_Event_t *new_event;
-	new_event = malloc(sizeof(evt_Event_t));
+	struct evt_Event *new_event;
+	new_event = malloc(sizeof(struct evt_Event));
 	new_event->fnptr = new_function;
 	new_event->args = args;
 	new_event->next = NULL;
@@ -21,11 +21,11 @@ evt_add_event(evt_EventFn_t new_function, void *args)
 	SDL_UnlockMutex(eq.mutex);
 }
 
-evt_Event_t *
+struct evt_Event *
 evt_get_event(void)
 {
 	SDL_LockMutex(eq.mutex);
-	evt_Event_t *old_event;
+	struct evt_Event *old_event;
 	if (eq.head == NULL) {
 		SDL_UnlockMutex(eq.mutex);
 		return NULL;
@@ -49,7 +49,7 @@ evt_init(void)
 void
 evt_process(void)
 {
-        evt_Event_t *event;
+        struct evt_Event *event;
 
 		evt_get_input();
         while((event = evt_get_event()) != NULL) {
