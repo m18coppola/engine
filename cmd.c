@@ -40,9 +40,8 @@ cmd_cli_interactive(void *arg)
 		}
 
 		args = cmd_tokenize(cmd_line);
-        fn_ptr = cmd_get_function(args[1]);
-        if (fn_ptr != NULL) {
-                evt_add_event(fn_ptr, args);
+        if (fn_ptr = cmd_get_function(args[1])) {
+            evt_add_event(fn_ptr, args);
         } else {
             if (args[1] != NULL) {
                 printf("Command \"%s\" not recognized.\n", args[1]);

@@ -54,8 +54,10 @@ evt_process(void)
 		evt_get_input();
         while((event = evt_get_event()) != NULL) {
             (*event->fnptr)(event->args);
-            free(event->args[0]);
-            free(event->args);
+            if (event->args) {
+                free(event->args[0]);
+                free(event->args);
+            }
             free(event);
         }
 }
