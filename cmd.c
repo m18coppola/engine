@@ -112,6 +112,9 @@ cmd_get_function(char *name)
     while (cmd_function_table[index].hash != hash && cmd_function_table[index].hash != 0) {
         index++;
     }
+    if (cmd_function_table[index].hash == 0) {
+        return NULL;
+    }
     return cmd_function_table[index].function_ptr;
 }
 
@@ -154,9 +157,11 @@ cmd_get_variable(char *name)
     while (cmd_variable_table[index].hash != hash && cmd_variable_table[index].hash != 0) {
         index++;
     }
+    if (cmd_variable_table[index].hash == 0) {
+        return NULL;
+    }
     return &cmd_variable_table[index].value;
 }
-
 
 void
 cmd_register_variable(char *name, char *value)
@@ -168,4 +173,19 @@ cmd_register_variable(char *name, char *value)
     }
     cmd_variable_table[index].hash = hash;
     cmd_variable_table[index].value = value;
+}
+
+void
+cmd_set_variable(char **args) {
+    char **value;
+    if (args[2] == NULL) {
+        printf("usage: set varname [value]\n");
+    } else if (args[3] == NULL) {
+        value = cmd_get_variable(args[2]);
+        if (value == NULL) {
+            printf("Variable %s not set.\n", args[2]);
+        } else {
+            printf("%s\n", *value);
+        }
+    }
 }
