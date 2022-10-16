@@ -36,6 +36,7 @@ unsigned int cmd_hash(char *str);
 void cmd_init(void);
 void cmd_register_command(char *name, evt_EventFn_t function);
 char **cmd_tokenize(char *string);
+void cmd_set_variable(char **args);
 
 
 char** cmd_get_variable(char *name);

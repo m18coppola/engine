@@ -135,6 +135,7 @@ cmd_init(void)
 	cli_thread = SDL_CreateThread((SDL_ThreadFunction)cmd_cli_interactive, "CLI", NULL);
     cmd_register_command("exit", main_exit);
     cmd_register_command("load_shader", dbg_rnd_load_shader);
+    cmd_register_command("set", cmd_set_variable);
 }
 
 void
@@ -187,5 +188,25 @@ cmd_set_variable(char **args) {
         } else {
             printf("%s\n", *value);
         }
+    } else {
+        value = cmd_get_variable(args[2]);
+        int i = 0;
+        char *ptr;
+        ptr = args[3];
+        while (!ptr[i++]);
+        ptr = malloc(sizeof(char) * ++i);
+        i = 0;
+        while (args[3][i]) {
+            ptr[i] = args[3][i];
+            i++;
+        }
+        ptr[i] = '\0';
+        if (value == NULL) {
+            cmd_register_variable(args[2], ptr);
+        } else {
+            free(*value);
+            *value = ptr;
+        }
     }
+    fflush(stdout);
 }
