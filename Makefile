@@ -21,7 +21,7 @@ run: main
 	$(info )
 	./app.bin
 
-memcheck: main 
+memcheck: main logs
 	$(info )
 	$(info ___STARTING EXECUTION___)
 	$(info ____CHECKMEM ENABLED____)
@@ -36,6 +36,9 @@ cachecheck: main logs
 	$(info ========================)
 	$(info )
 	valgrind --tool=cachegrind --log-file="logs/cachecheck.log" ./app.bin
+
+logs::
+	mkdir -p logs
 
 clear_screen::
 	clear
