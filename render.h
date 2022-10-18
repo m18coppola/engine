@@ -5,11 +5,10 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
-typedef GLuint rnd_Shader_t;
-
 void render(void);
 void rnd_close(void);
 int rnd_init(int width, int height);
-rnd_Shader_t rnd_load_shader(char *filename);
+GLuint rnd_load_shader(char *filename, GLenum type);
+GLuint rnd_create_shader_program(char *vshader_path, char *fshader_path);
 
 #endif /* RENDER_H */

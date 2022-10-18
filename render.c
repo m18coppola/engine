@@ -70,19 +70,60 @@ STAGE2_ERROR:
     return -1;
 }
 
-rnd_Shader_t
-rnd_load_shader(char *filename)
+GLuint
+rnd_load_shader(char *filename, GLenum type)
 {
     SDL_RWops *io;
     char *source;
     size_t filesize;
+    GLuint shader_id;
+    GLint gl_status;
 
     io = SDL_RWFromFile(filename, "r");
     filesize = SDL_RWsize(io);
-    source = malloc(filesize);
-    if (SDL_RWread(io, source, filesize, 1) > 0) {
-        printf("%s\n", source);
+    source = malloc(filesize + 1);
+    if (SDL_RWread(io, source, filesize, 1) != 0) {
+        fprintf(
+                stderr,
+                "RND: Failed to load file \"%s\". Exiting.\nSDL_Error: %s\n",
+                filename,
+                SDL_GetError());
+                return (GLuint) 0;
     }
     SDL_RWclose(io);
-    return (rnd_Shader_t)0;
+    shader_id = glCreateShader(type);
+    glShaderSource(shader_id, 1, (const GLchar * const *)&source, NULL);
+    free(source);
+    glCompileShader(shader_id);
+    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &gl_status);
+    if (gl_status != GL_TRUE) {
+        char errlog[512];
+        glGetShaderInfoLog(shader_id, 512, NULL, errlog);
+        fprintf(stderr,
+                "RND: Failed to compile \"%s\"\n%s:\n%s\n",
+                filename, source, errlog);
+    }
+    return shader_id;
+}
+
+GLuint
+rnd_create_shader_program(char *vshader_path, char *fshader_path)
+{
+    GLuint vshader_id, fshader_id;
+    GLuint shader_program_id;
+
+    vshader_id = rnd_load_shader(vshader_path, GL_VERTEX_SHADER);
+    fshader_id = rnd_load_shader(fshader_path, GL_FRAGMENT_SHADER);
+    shader_program_id = glCreateProgram();
+    glAttachShader(shader_program_id, vshader_id);
+    glAttachShader(shader_program_id, fshader_id);
+    glLinkProgram(shader_program_id);
+    GLint linked;
+    glGetProgramiv(shader_program_id, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        char errlog[512];
+        glGetProgramInfoLog(shader_program_id, 512, NULL, errlog);
+        fprintf(stderr, "RND: Shader program failed to link:\n%s", errlog);
+    }
+    return shader_program_id;
 }

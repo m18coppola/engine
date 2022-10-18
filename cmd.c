@@ -134,7 +134,6 @@ cmd_init(void)
 {
 	cli_thread = SDL_CreateThread((SDL_ThreadFunction)cmd_cli_interactive, "CLI", NULL);
     cmd_register_command("exit", main_exit);
-    cmd_register_command("load_shader", dbg_rnd_load_shader);
     cmd_register_command("set", cmd_set_variable);
 }
 
@@ -177,7 +176,8 @@ cmd_register_variable(char *name, char *value)
 }
 
 void
-cmd_set_variable(char **args) {
+cmd_set_variable(char **args)
+{
     char **value;
     if (args[2] == NULL) {
         printf("usage: set varname [value]\n");
