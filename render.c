@@ -85,17 +85,26 @@ rnd_load_shader(char *filename, GLenum type)
 {
     SDL_RWops *io;
     char *source;
+    char errlog[512];
     size_t filesize;
     GLuint shader_id;
     GLint gl_status;
 
     io = SDL_RWFromFile(filename, "r");
+    if (io == NULL) {
+        fprintf(
+                stderr,
+                "RND: Failed to open file \"%s\". Exiting.\nSDL_Error: %s\n",
+                filename,
+                SDL_GetError());
+                return (GLuint) 0;
+    }
     filesize = SDL_RWsize(io);
     source = malloc(filesize + 1);
     if (SDL_RWread(io, source, filesize, 1) == 0) {
         fprintf(
                 stderr,
-                "RND: Failed to load file \"%s\". Exiting.\nSDL_Error: %s\n",
+                "RND: Failed to read file \"%s\". Exiting.\nSDL_Error: %s\n",
                 filename,
                 SDL_GetError());
                 return (GLuint) 0;
@@ -103,6 +112,15 @@ rnd_load_shader(char *filename, GLenum type)
     source[filesize] = '\0';
     SDL_RWclose(io);
     shader_id = glCreateShader(type);
+    if (shader_id == 0) {
+        glGetShaderInfoLog(shader_id, 512, NULL, errlog);
+        fprintf(
+                stderr,
+                "RND: OpenGL failed to allocate vram for \"%s\". Exiting.\nGL Error Log:\n%s\n",
+                filename,
+                errlog);
+                return (GLuint) 0;
+    }
     glShaderSource(shader_id, 1, (const GLchar * const *)&source, NULL);
     free(source);
     glCompileShader(shader_id);
@@ -126,6 +144,13 @@ rnd_create_shader_program(char *vshader_path, char *fshader_path)
     vshader_id = rnd_load_shader(vshader_path, GL_VERTEX_SHADER);
     fshader_id = rnd_load_shader(fshader_path, GL_FRAGMENT_SHADER);
     shader_program_id = glCreateProgram();
+    if (shader_program_id == 0) {
+        fprintf(
+                stderr,
+                "RND: OpenGL failed to allocate vram for shader program (using \"%s\" and \"%s\"). Exiting.\n",
+                vshader_path, fshader_path);
+                return (GLuint) 0;
+    }
     glAttachShader(shader_program_id, vshader_id);
     glAttachShader(shader_program_id, fshader_id);
     glLinkProgram(shader_program_id);
