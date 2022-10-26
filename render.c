@@ -1,6 +1,7 @@
 #include "render.h"
 
 static SDL_Window *window = NULL;
+GLuint current_shader_program;
 
 void
 render(void)
@@ -8,6 +9,8 @@ render(void)
     if (window != NULL) {
         glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(current_shader_program);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         SDL_GL_SwapWindow(window);
     }
 }
@@ -62,6 +65,13 @@ rnd_init(int width, int height)
         goto STAGE3_ERROR;
     }
 
+    //load test shader
+    current_shader_program = rnd_create_shader_program("vshader.glsl", "fshader.glsl");
+    //bind a temporary VAO for testing
+    GLuint vao_stub;
+    glGenVertexArrays(1, &vao_stub);
+    glBindVertexArray(vao_stub);
+
     return 0;
 
 STAGE3_ERROR:
@@ -82,7 +92,7 @@ rnd_load_shader(char *filename, GLenum type)
     io = SDL_RWFromFile(filename, "r");
     filesize = SDL_RWsize(io);
     source = malloc(filesize + 1);
-    if (SDL_RWread(io, source, filesize, 1) != 0) {
+    if (SDL_RWread(io, source, filesize, 1) == 0) {
         fprintf(
                 stderr,
                 "RND: Failed to load file \"%s\". Exiting.\nSDL_Error: %s\n",
@@ -90,6 +100,7 @@ rnd_load_shader(char *filename, GLenum type)
                 SDL_GetError());
                 return (GLuint) 0;
     }
+    source[filesize] = '\0';
     SDL_RWclose(io);
     shader_id = glCreateShader(type);
     glShaderSource(shader_id, 1, (const GLchar * const *)&source, NULL);
