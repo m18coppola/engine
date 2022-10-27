@@ -4,12 +4,13 @@ static SDL_Window *window = NULL;
 GLuint current_shader_program;
 
 void
-render(void)
+render(unsigned long time)
 {
     if (window != NULL) {
         glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(current_shader_program);
+        glUniform1ui(glGetUniformLocation(current_shader_program, "time"), (unsigned int)time);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         SDL_GL_SwapWindow(window);
     }

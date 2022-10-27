@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
-void render(void);
+void render(unsigned long time);
 void rnd_close(void);
 int rnd_init(int width, int height);
 GLuint rnd_load_shader(char *filename, GLenum type);

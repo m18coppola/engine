@@ -26,6 +26,8 @@ main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
+    unsigned long time;
+
     printf("Starting Engine.\nPID:%d\n", getpid());
     if(init() < 0) {
         fprintf(
@@ -35,8 +37,9 @@ main(int argc, char **argv)
     }
 
 	while (!engine_exited) {
+        time = SDL_GetTicks();
         evt_process();
-		render();
+		render(time);
 	}
 	rnd_close();
 	return 0;
