@@ -10,5 +10,6 @@ void rnd_close(void);
 int rnd_init(int width, int height);
 GLuint rnd_load_shader(char *filename, GLenum type);
 GLuint rnd_create_shader_program(char *vshader_path, char *fshader_path);
+GLuint rnd_obj_load_vbo(char *obj_path, char *texture_path); 
 
 #endif /* RENDER_H */

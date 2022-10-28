@@ -73,6 +73,8 @@ rnd_init(int width, int height)
     glGenVertexArrays(1, &vao_stub);
     glBindVertexArray(vao_stub);
 
+    rnd_obj_load_vbo("monke.obj", "nop");
+
     return 0;
 
 STAGE3_ERROR:
@@ -163,4 +165,70 @@ rnd_create_shader_program(char *vshader_path, char *fshader_path)
         fprintf(stderr, "RND: Shader program failed to link:\n%s", errlog);
     }
     return shader_program_id;
+}
+
+GLuint
+rnd_obj_load_vbo(char *obj_path, char *texture_path) {
+    /* create VAO for object */
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+
+    /* bind it (makes it the current vbo state context) */
+    glBindVertexArray(vao);
+
+    /* create 6 buffer objects: */
+    /*
+     * vertex data
+     * texture data
+     * normal data
+     * vertex index
+     * texture index
+     * normal index
+     */
+    GLuint vbos[6];
+    glGenBuffers(6, vbos);
+
+    /* load from obj file */
+    SDL_RWops *io;
+    size_t filesize;
+    char *source;
+
+    io = SDL_RWFromFile(obj_path, "r");
+    if (io == NULL) {
+        fprintf(
+                stderr,
+                "RND: Failed to open file \"%s\". Exiting.\nSDL_Error: %s\n",
+                obj_path,
+                SDL_GetError());
+                return (GLuint) 0;
+    }
+    filesize = SDL_RWsize(io);
+    source = malloc(filesize + 1);
+    if (SDL_RWread(io, source, filesize, 1) == 0) {
+        fprintf(
+                stderr,
+                "RND: Failed to read file \"%s\". Exiting.\nSDL_Error: %s\n",
+                obj_path,
+                SDL_GetError());
+                return (GLuint) 0;
+    }
+    source[filesize] = '\0';
+    SDL_RWclose(io);
+
+    /* read source line-by-line, dump into temp buffers */
+    char current_line[128];
+    char *ptr;
+    char *dest;
+
+    ptr = source;
+    while (*ptr != '\0') {
+        dest = current_line;
+        while (*ptr != '\n' && *ptr != '\0') {
+            *(dest++) = *(ptr++);
+        }
+        *dest = '\0';
+        printf("DBG_RND: %s\n", current_line);
+    }
+    return (GLuint) 0;
+    
 }
