@@ -73,7 +73,7 @@ rnd_init(int width, int height)
     glGenVertexArrays(1, &vao_stub);
     glBindVertexArray(vao_stub);
 
-    rnd_obj_load_vbo("monke.obj", "nop");
+    rnd_create_vbo_from_obj("monke.obj", "nop");
 
     return 0;
 
@@ -168,7 +168,11 @@ rnd_create_shader_program(char *vshader_path, char *fshader_path)
 }
 
 GLuint
-rnd_obj_load_vbo(char *obj_path, char *texture_path) {
+rnd_create_vbo_from_obj(char *obj_path, char *texture_path) {
+
+    //TODO: texture loading
+    (void)texture_path;
+
     /* create VAO for object */
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -228,7 +232,7 @@ rnd_obj_load_vbo(char *obj_path, char *texture_path) {
         }
         *dest = '\0';
         printf("DBG_RND: %s\n", current_line);
+        ptr++;
     }
     return (GLuint) 0;
-    
 }
