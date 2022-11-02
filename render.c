@@ -86,34 +86,12 @@ STAGE2_ERROR:
 GLuint
 rnd_load_shader(char *filename, GLenum type)
 {
-    SDL_RWops *io;
     char *source;
     char errlog[512];
-    size_t filesize;
     GLuint shader_id;
     GLint gl_status;
 
-    io = SDL_RWFromFile(filename, "r");
-    if (io == NULL) {
-        fprintf(
-                stderr,
-                "RND: Failed to open file \"%s\". Exiting.\nSDL_Error: %s\n",
-                filename,
-                SDL_GetError());
-                return (GLuint) 0;
-    }
-    filesize = SDL_RWsize(io);
-    source = malloc(filesize + 1);
-    if (SDL_RWread(io, source, filesize, 1) == 0) {
-        fprintf(
-                stderr,
-                "RND: Failed to read file \"%s\". Exiting.\nSDL_Error: %s\n",
-                filename,
-                SDL_GetError());
-                return (GLuint) 0;
-    }
-    source[filesize] = '\0';
-    SDL_RWclose(io);
+    source = utl_file_to_string(filename);
     shader_id = glCreateShader(type);
     if (shader_id == 0) {
         glGetShaderInfoLog(shader_id, 512, NULL, errlog);
@@ -168,7 +146,8 @@ rnd_create_shader_program(char *vshader_path, char *fshader_path)
 }
 
 GLuint
-rnd_create_vbo_from_obj(char *obj_path, char *texture_path) {
+rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
+{
 
     //TODO: texture loading
     (void)texture_path;
@@ -189,36 +168,24 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path) {
      * texture index
      * normal index
      */
+    
+    struct rnd_BufferedFloat *v_stack = NULL;
+    struct rnd_BufferedFloat *vt_stack = NULL;
+    struct rnd_BufferedFloat *vn_stack = NULL;
+    struct rnd_BufferedInt *i_stack = NULL;
+    int v_ct, vt_ct, vn_ct, i_ct;
+    v_ct = vt_ct = vn_ct = i_ct = 0;
+    float *v_buf;
+    float *vt_buf;
+    float *vn_buf;
+    int *i_buf;
+
     GLuint vbos[6];
     glGenBuffers(6, vbos);
 
     /* load from obj file */
-    SDL_RWops *io;
-    size_t filesize;
     char *source;
-
-    io = SDL_RWFromFile(obj_path, "r");
-    if (io == NULL) {
-        fprintf(
-                stderr,
-                "RND: Failed to open file \"%s\". Exiting.\nSDL_Error: %s\n",
-                obj_path,
-                SDL_GetError());
-                return (GLuint) 0;
-    }
-    filesize = SDL_RWsize(io);
-    source = malloc(filesize + 1);
-    if (SDL_RWread(io, source, filesize, 1) == 0) {
-        fprintf(
-                stderr,
-                "RND: Failed to read file \"%s\". Exiting.\nSDL_Error: %s\n",
-                obj_path,
-                SDL_GetError());
-                return (GLuint) 0;
-    }
-    source[filesize] = '\0';
-    SDL_RWclose(io);
-
+    source = utl_file_to_string(obj_path);
     /* read source line-by-line, dump into temp buffers */
     char current_line[128];
     char *ptr;
@@ -231,8 +198,59 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path) {
             *(dest++) = *(ptr++);
         }
         *dest = '\0';
-        printf("DBG_RND: %s\n", current_line);
         ptr++;
+        if (current_line[0] == 'v') {
+            switch (current_line[1]) {
+                case ' ':
+                    rnd_load_vdata_into_buffer(&v_stack, current_line, &v_ct);
+                    break;
+                case 't':
+                    rnd_load_vdata_into_buffer(&vt_stack, current_line, &vt_ct);
+                    break;
+                case 'n':
+                    rnd_load_vdata_into_buffer(&vn_stack, current_line, &vn_ct);
+                    break;
+            }
+        } else if (current_line[0] == 'f') {
+            //rnd_load_idata_into_buffer
+            ;
+        }
+    }
+    v_buf = rnd_dump_float_buffer(&v_stack, v_ct);
+    for (int i = 0; i < v_ct; i++) {
+        printf("%f\n", v_buf[i]);
     }
     return (GLuint) 0;
+}
+
+void
+rnd_load_vdata_into_buffer(struct rnd_BufferedFloat **buf_ptr, char* vdata, int *count)
+{
+    int i = 2;
+    char **tokens = utl_tokenize(vdata);
+    while (tokens[i] != NULL) {
+        struct rnd_BufferedFloat *new_buf_float = malloc(sizeof(struct rnd_BufferedFloat));
+        new_buf_float->value = atof(tokens[i]);
+        new_buf_float->next = *buf_ptr;
+        *buf_ptr = new_buf_float;
+        i++;
+        (*count)++;
+    }
+}
+
+float *
+rnd_dump_float_buffer(struct rnd_BufferedFloat **stack_ptr, int count)
+{
+    float *buffer = malloc(sizeof(float) * count);
+    struct rnd_BufferedFloat *new_root;
+
+    int i = 0;
+    while (i < count) {
+        buffer[i] = (*stack_ptr)->value;
+        new_root = (*stack_ptr)->next;
+        free(*stack_ptr);
+        *stack_ptr = new_root;
+        i++;
+    }
+    return buffer;
 }

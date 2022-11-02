@@ -15,11 +15,6 @@
 #define FNV_OFFSET 0xcbf29ce484222325
 #define FNV_PRIME 0x100000001b3
 
-struct cmd_Token {
-	char *string;
-	struct cmd_Token *next;
-};
-
 struct cmd_Function {
     unsigned int hash;
     evt_EventFn_t function_ptr;
@@ -35,7 +30,6 @@ evt_EventFn_t cmd_get_function(char *name);
 unsigned int cmd_hash(char *str);
 void cmd_init(void);
 void cmd_register_command(char *name, evt_EventFn_t function);
-char **cmd_tokenize(char *string);
 void cmd_set_variable(char **args);
 
 

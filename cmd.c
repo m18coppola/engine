@@ -39,7 +39,7 @@ cmd_cli_interactive(void *arg)
 			break;
 		}
 
-		args = cmd_tokenize(cmd_line);
+		args = utl_tokenize(cmd_line);
         if ((fn_ptr = cmd_get_function(args[1]))) {
             evt_add_event(fn_ptr, args);
         } else {
@@ -57,49 +57,6 @@ cmd_cli_interactive(void *arg)
 	return 0;
 }
 
-char **
-cmd_tokenize(char *str)
-{
-    char **token_list;
-    struct cmd_Token *head;
-    struct cmd_Token *ptr;
-    head = malloc(sizeof(struct cmd_Token));
-    head->string = str;
-    head->next = NULL;
-    ptr = head;
-    int i;
-    int in_token = 0;
-    int token_count = 0;
-    
-    while (*str != '\0') {
-        if (*str <= ' ') {
-            if (in_token) {
-                *str = '\0';
-                in_token = 0;
-            }
-        } else if (!in_token) {
-            token_count++;
-            ptr->next = malloc(sizeof(struct cmd_Token));
-            ptr = ptr->next;
-            ptr->string = str;
-            ptr->next = NULL;
-            in_token = 1;
-        }
-        str++;
-    }
-    token_list = malloc(sizeof(char **) * (2 + token_count));
-    i = 0;
-    while(head != NULL) {
-        token_list[i] = head->string;
-        ptr = head;
-        head = head->next;
-        free(ptr);
-        i++;
-    }
-    token_list[i] = NULL;
-
-    return token_list;
-}
 
 evt_EventFn_t
 cmd_get_function(char *name)
