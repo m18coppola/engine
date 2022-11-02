@@ -159,15 +159,9 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
     /* bind it (makes it the current vbo state context) */
     glBindVertexArray(vao);
 
-    /* create 6 buffer objects: */
-    /*
-     * vertex data
-     * texture data
-     * normal data
-     * vertex index
-     * texture index
-     * normal index
-     */
+    /* create 4 buffers for vao: pos, texture, normal, index */
+    GLuint vbos[4];
+    glGenBuffers(4, vbos);
     
     struct rnd_BufferedFloat *v_stack = NULL;
     struct rnd_BufferedFloat *vt_stack = NULL;
@@ -179,9 +173,6 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
     float *vt_buf;
     float *vn_buf;
     int *i_buf;
-
-    GLuint vbos[6];
-    glGenBuffers(6, vbos);
 
     /* load from obj file */
     char *source;
@@ -212,14 +203,49 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
                     break;
             }
         } else if (current_line[0] == 'f') {
-            //rnd_load_idata_into_buffer
-            ;
+            rnd_load_idata_into_buffer(&i_stack, current_line, &i_ct);
         }
     }
+    free(source);
     v_buf = rnd_dump_float_buffer(&v_stack, v_ct);
-    for (int i = 0; i < v_ct; i++) {
-        printf("%f\n", v_buf[i]);
+    vt_buf = rnd_dump_float_buffer(&vt_stack, vt_ct);
+    vn_buf = rnd_dump_float_buffer(&vn_stack, vn_ct);
+    i_buf = rnd_dump_int_buffer(&i_stack, i_ct);
+    for (int i = 0; i < i_ct; i++) {
+        printf("%d\n", i_buf[i]);
     }
+
+    //TODO: turns out you can only have 1 index buffer...
+    //      we need to decompress the model data
+    ///* temp buffers to vbo */
+    ///* pos data */
+    //glBindBuffer(GL_ARRAY_BUFFER, vbos[0]);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(float) * v_ct, v_buf, GL_STATIC_DRAW);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    //glEnableVertexAttribArray(0);
+
+    ///* texture data */
+    //glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vt_ct, vt_buf, GL_STATIC_DRAW);
+    //glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    //glEnableVertexAttribArray(1);
+
+    ///* normal data */
+    //glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vn_ct, vn_buf, GL_STATIC_DRAW);
+    //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    //glEnableVertexAttribArray(2);
+
+    ///* index data */
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * vn_ct, vn_buf, GL_STATIC_DRAW);
+    //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    //glEnableVertexAttribArray(2);
+
+    free(v_buf);
+    free(vt_buf);
+    free(vn_buf);
+    free(i_buf);
     return (GLuint) 0;
 }
 
@@ -236,6 +262,29 @@ rnd_load_vdata_into_buffer(struct rnd_BufferedFloat **buf_ptr, char* vdata, int 
         i++;
         (*count)++;
     }
+    free(tokens);
+}
+
+void
+rnd_load_idata_into_buffer(struct rnd_BufferedInt **buf_ptr, char* idata, int *count)
+{
+    int i = 2;
+    char **tokens = utl_tokenize(idata);
+    struct rnd_BufferedInt *new_buf_int;
+    int values[3];
+    int j;
+    while (tokens[i] != NULL) {
+        sscanf(tokens[i], "%d/%d/%d", &values[0], &values[1], &values[2]);
+        for (j = 0; j < 3; j++) {
+            new_buf_int = malloc(sizeof(struct rnd_BufferedInt));
+            new_buf_int->value = values[j];
+            new_buf_int->next = *buf_ptr;
+            *buf_ptr = new_buf_int;
+            (*count)++;
+        }
+        i++;
+    }
+    free(tokens);
 }
 
 float *
@@ -244,13 +293,30 @@ rnd_dump_float_buffer(struct rnd_BufferedFloat **stack_ptr, int count)
     float *buffer = malloc(sizeof(float) * count);
     struct rnd_BufferedFloat *new_root;
 
-    int i = 0;
-    while (i < count) {
+    int i = count - 1;
+    while (i >= 0) {
         buffer[i] = (*stack_ptr)->value;
         new_root = (*stack_ptr)->next;
         free(*stack_ptr);
         *stack_ptr = new_root;
-        i++;
+        i--;
+    }
+    return buffer;
+}
+
+int *
+rnd_dump_int_buffer(struct rnd_BufferedInt **stack_ptr, int count)
+{
+    int *buffer = malloc(sizeof(int) * count);
+    struct rnd_BufferedInt *new_root;
+
+    int i = count - 1;
+    while (i >= 0) {
+        buffer[i] = (*stack_ptr)->value;
+        new_root = (*stack_ptr)->next;
+        free(*stack_ptr);
+        *stack_ptr = new_root;
+        i--;
     }
     return buffer;
 }
