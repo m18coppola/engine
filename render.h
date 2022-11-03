@@ -14,6 +14,30 @@ struct rnd_BufferedFloat {
     float value;
     struct rnd_BufferedFloat *next;
 };
+struct rnd_Vertex {
+    float v[3];
+    float vt[2];
+    float vn[3];
+};
+
+union rnd_VecBuffer {
+    float *raw;
+    float (*vecs)[3];
+};
+
+union rnd_TCoordBuffer {
+    float *raw;
+    float (*coords)[2];
+};
+
+union rnd_IndexBuffer {
+    int *raw;
+    struct {
+        int v;
+        int vt;
+        int vn;
+    } *index;
+};
 
 void render(unsigned long time);
 void rnd_close(void);

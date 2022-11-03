@@ -2,16 +2,17 @@
 
 static SDL_Window *window = NULL;
 GLuint current_shader_program;
+static int rnd_index_count;
 
 void
 render(unsigned long time)
 {
+    (void)time;
     if (window != NULL) {
         glClearColor(1.0, 1.0, 1.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(current_shader_program);
-        glUniform1ui(glGetUniformLocation(current_shader_program, "time"), (unsigned int)time);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, rnd_index_count, GL_INT, (void *)0);
         SDL_GL_SwapWindow(window);
     }
 }
@@ -68,12 +69,12 @@ rnd_init(int width, int height)
 
     //load test shader
     current_shader_program = rnd_create_shader_program("vshader.glsl", "fshader.glsl");
-    //bind a temporary VAO for testing
-    GLuint vao_stub;
-    glGenVertexArrays(1, &vao_stub);
-    glBindVertexArray(vao_stub);
+    
+    //options
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 
-    rnd_create_vbo_from_obj("monke.obj", "nop");
+    rnd_create_vbo_from_obj("pyr.obj", "nop");
 
     return 0;
 
@@ -152,16 +153,6 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
     //TODO: texture loading
     (void)texture_path;
 
-    /* create VAO for object */
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-
-    /* bind it (makes it the current vbo state context) */
-    glBindVertexArray(vao);
-
-    /* create 4 buffers for vao: pos, texture, normal, index */
-    GLuint vbos[4];
-    glGenBuffers(4, vbos);
     
     struct rnd_BufferedFloat *v_stack = NULL;
     struct rnd_BufferedFloat *vt_stack = NULL;
@@ -169,10 +160,10 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
     struct rnd_BufferedInt *i_stack = NULL;
     int v_ct, vt_ct, vn_ct, i_ct;
     v_ct = vt_ct = vn_ct = i_ct = 0;
-    float *v_buf;
-    float *vt_buf;
-    float *vn_buf;
-    int *i_buf;
+    union rnd_VecBuffer v_buf;
+    union rnd_TCoordBuffer vt_buf;
+    union rnd_VecBuffer vn_buf;
+    union rnd_IndexBuffer i_buf;
 
     /* load from obj file */
     char *source;
@@ -207,16 +198,52 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
         }
     }
     free(source);
-    v_buf = rnd_dump_float_buffer(&v_stack, v_ct);
-    vt_buf = rnd_dump_float_buffer(&vt_stack, vt_ct);
-    vn_buf = rnd_dump_float_buffer(&vn_stack, vn_ct);
-    i_buf = rnd_dump_int_buffer(&i_stack, i_ct);
-    for (int i = 0; i < i_ct; i++) {
-        printf("%d\n", i_buf[i]);
-    }
+    v_buf.raw = rnd_dump_float_buffer(&v_stack, v_ct);
+    vt_buf.raw = rnd_dump_float_buffer(&vt_stack, vt_ct);
+    vn_buf.raw = rnd_dump_float_buffer(&vn_stack, vn_ct);
+    i_buf.raw = rnd_dump_int_buffer(&i_stack, i_ct);
 
-    //TODO: turns out you can only have 1 index buffer...
-    //      we need to decompress the model data
+    struct rnd_Vertex *vertex_buffer;
+    int *index_buffer;
+    vertex_buffer = malloc(sizeof(struct rnd_Vertex) * v_ct);
+    rnd_index_count = i_ct / 3;
+    printf("INDEX_COUNT: %d\n", rnd_index_count);
+    index_buffer = malloc(sizeof(int) * (i_ct / 3));
+    for (int i = 0; i < i_ct / 3; i++) {
+        vertex_buffer[i_buf.index[i].v].v[0] = v_buf.vecs[i_buf.index[i].v][0];
+        vertex_buffer[i_buf.index[i].v].v[1] = v_buf.vecs[i_buf.index[i].v][1];
+        vertex_buffer[i_buf.index[i].v].v[2] = v_buf.vecs[i_buf.index[i].v][2];
+        vertex_buffer[i_buf.index[i].v].vt[0] = vt_buf.coords[i_buf.index[i].vt][0];
+        vertex_buffer[i_buf.index[i].v].vt[1] = vt_buf.coords[i_buf.index[i].vt][1];
+        vertex_buffer[i_buf.index[i].v].vn[0] = vn_buf.vecs[i_buf.index[i].vn][0];
+        vertex_buffer[i_buf.index[i].v].vn[1] = vn_buf.vecs[i_buf.index[i].vn][1];
+        vertex_buffer[i_buf.index[i].v].vn[2] = vn_buf.vecs[i_buf.index[i].vn][2];
+        index_buffer[i] = i_buf.index[i].v;
+    }
+    
+    /* create VAO for object */
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+
+    /* bind it (makes it the current vbo state context) */
+    glBindVertexArray(vao);
+
+    GLuint vbos[2];
+    glGenBuffers(2, vbos);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbos[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(struct rnd_Vertex) * v_ct, vertex_buffer, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct rnd_Vertex), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(struct rnd_Vertex), (void *)3);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(struct rnd_Vertex), (void *)5);
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbos[1]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * (i_ct / 3), index_buffer, GL_STATIC_DRAW);
+
+    
     ///* temp buffers to vbo */
     ///* pos data */
     //glBindBuffer(GL_ARRAY_BUFFER, vbos[0]);
@@ -242,11 +269,11 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
     //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
     //glEnableVertexAttribArray(2);
 
-    free(v_buf);
-    free(vt_buf);
-    free(vn_buf);
-    free(i_buf);
-    return (GLuint) 0;
+    free(v_buf.raw);
+    free(vt_buf.raw);
+    free(vn_buf.raw);
+    free(i_buf.raw);
+    return (GLuint) vao;
 }
 
 void
