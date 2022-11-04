@@ -12,7 +12,8 @@ render(unsigned long time)
         glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(current_shader_program);
-        glDrawElements(GL_TRIANGLES, rnd_index_count, GL_INT, (void *)0);
+        glUniform1ui(glGetUniformLocation(current_shader_program, "time"), (unsigned int)time);
+        glDrawElements(GL_TRIANGLES, rnd_index_count, GL_UNSIGNED_INT, (void *)0);
         SDL_GL_SwapWindow(window);
     }
 }
@@ -204,7 +205,7 @@ rnd_create_vbo_from_obj(char *obj_path, char *texture_path)
     i_buf.raw = rnd_dump_int_buffer(&i_stack, i_ct);
 
     struct rnd_Vertex *vertex_buffer;
-    int *index_buffer;
+    unsigned int *index_buffer;
     vertex_buffer = malloc(sizeof(struct rnd_Vertex) * v_ct);
     rnd_index_count = i_ct / 3;
     printf("INDEX_COUNT: %d\n", rnd_index_count);

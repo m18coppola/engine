@@ -29,5 +29,5 @@ void main()
 	vec3 diffuse = diffuse_level.xyz * max(cosTheta, 0.0) * texture(s, tc).xyz;
 	vec3 specular = specular_level.xyz * pow(max(cosPhi, 0.0), shininess);
 
-	color = vec4(ambient.xyz + diffuse + specular, 1.0);
+	color = vec4(normalize(fNormal + vec3(1.0, 1.0, 1.0)), 1.0);
 }
