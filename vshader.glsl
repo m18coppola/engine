@@ -28,7 +28,7 @@ void main()
 
     gl_Position = yrot * vec4(position, 1.0);
 	fPosition = gl_Position.xyz;
-	fNormal = normal - vec3(0.0, 0.0, -8.0);
+	fNormal = normal;
 	light_dir = light_pos - fPosition;
 	tc = tcs;
 }
