@@ -69,13 +69,13 @@ rnd_init(int width, int height)
     }
 
     //load test shader
-    current_shader_program = rnd_create_shader_program("vshader.glsl", "fshader.glsl");
+    current_shader_program = rnd_create_shader_program("resource/shader/vshader.glsl", "resource/shader/fshader.glsl");
     
     //options
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
-    rnd_create_vbo_from_obj("pyr.obj", "nop");
+    rnd_create_vbo_from_obj("resource/obj/pyr.obj", "nop");
 
     return 0;
 
