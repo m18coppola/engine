@@ -1,0 +1,7 @@
+TODO:
+	- Multithreading (at least seperate render from game thread)
+		* Bag of Tasks?
+	- Better error-logging
+		* use preprocessor defs like __LINE__ and __FILE__
+	- Camera System
+	- Rewrite cmd parser
